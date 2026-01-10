@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "google-auth-library": "^9.0.0"
+    "googleapis": "^126.0.0"
     "recharts": "^3.6.0",
     "lucide-react": "^0.562.0",
     "react-dom": "^19.2.3",
