@@ -364,7 +364,7 @@ const App: React.FC = () => {
             <div className="w-12 h-12 rounded-2xl flex items-center justify-center overflow-hidden bg-white shadow-md border border-slate-50 p-1">
               {!logoError ? (
                 <img 
-                  src="/Logo/ogah.png" 
+                  src="Logo/ogah.png" 
                   alt="Ogah Ribetzzz Logo" 
                   className="w-full h-full object-contain" 
                   onError={() => setLogoError(true)}
