@@ -1,36 +1,75 @@
-export interface Talent {
+
+export interface Income {
   id: string;
-  name: string;
-  role: string;
-  skills: string[];
-  avatarUrl: string;
-  availableForHire: boolean;
+  donorName: string;
+  amount: number;
+  date: string;
+  proofImage?: string;
 }
 
-export interface UMKMProduct {
+export interface Expense {
   id: string;
-  name: string;
-  owner: string;
-  price: number;
+  itemName: string;
+  unitPrice: number;
+  qty: number;
+  date: string;
+}
+
+export interface Distribution {
+  id: string;
+  count: number;
+  itemType: string;
+  date: string;
+}
+
+export interface Article {
+  id: string;
+  title: string;
+  content: string;
+  date: string;
   imageUrl: string;
-  category: string;
 }
 
-export interface FinancialRecord {
-  month: string;
-  income: number;
-  expense: number;
-}
-
-export interface ProgramProgress {
+export interface GalleryItem {
   id: string;
-  name: string;
-  progress: number; // 0-100
-  status: 'Planning' | 'In Progress' | 'Completed';
+  url: string;
+  caption: string;
+  type: 'image' | 'video';
 }
 
-export interface VisionStat {
-  label: string;
-  value: string;
-  trend?: string;
+export interface LayoutConfig {
+  primaryColor: 'emerald' | 'blue' | 'indigo' | 'rose' | 'amber' | 'slate';
+  fontFamily: 'Plus Jakarta Sans' | 'Inter' | 'Merriweather' | 'Roboto Mono';
+  animationEnabled: boolean;
+  heroImageUrl: string;
+  borderRadius: 'rounded-none' | 'rounded-xl' | 'rounded-3xl' | 'rounded-[3rem]';
+  headerStyle: 'gradient' | 'solid';
+  themeMode: 'light' | 'soft';
+  showDonationSection: boolean;
+  qrisImageUrl: string;
+  donationTitle: string;
+  donationDescription: string;
+  foundationName: string;
+  foundationDescription: string;
+  aboutUs: string;
+  vision: string;
+  mission: string;
+  goals: string;
+  instagramUrl: string;
+  // Google Sheets Integration
+  sheetUrlDonation?: string;
+  sheetUrlGallery?: string;
+  sheetUrlArticles?: string;
+}
+
+export type AppView = 'home' | 'transparency' | 'gallery' | 'articles' | 'admin';
+
+export interface AppData {
+  incomes: Income[];
+  pendingIncomes: Income[];
+  expenses: Expense[];
+  distributions: Distribution[];
+  articles: Article[];
+  gallery: GalleryItem[];
+  layout: LayoutConfig;
 }
