@@ -1,12 +1,10 @@
 import { AppData, LayoutConfig } from './types';
 
-// ============================================================================
-// AREA PENGATURAN GAMBAR MANUAL
-// ============================================================================
+// Gunakan path relatif (tanpa / di depan) 
+// untuk memastikan aset di folder public terbaca dalam lingkungan iframe
 export const ASSETS = {
-  // Menggunakan file yang ada di folder Logo di dalam proyek
-  LOGO: '/Logo/ogah.png', 
-  QRIS: '/Logo/qris.png'
+  LOGO: 'ogah.png', 
+  QRIS: 'qris.png'
 };
 
 export const APP_CONFIG = {

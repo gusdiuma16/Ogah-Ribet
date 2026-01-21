@@ -168,15 +168,11 @@ const App: React.FC = () => {
     if (!saved) return INITIAL_DATA;
     try {
       const parsed = JSON.parse(saved);
-      // PENGATURAN MIGRASI: Jika link gambar di storage adalah Google Drive (lama), paksa reset ke ASSETS lokal.
       const mergedLayout = { ...INITIAL_DATA.layout, ...parsed.layout };
       
-      if (mergedLayout.logoUrl?.includes('drive.google.com')) {
-         mergedLayout.logoUrl = ASSETS.LOGO;
-      }
-      if (mergedLayout.qrisImageUrl?.includes('drive.google.com')) {
-         mergedLayout.qrisImageUrl = ASSETS.QRIS;
-      }
+      // Update path ke path root folder public (selalu ambil dari ASSETS)
+      mergedLayout.logoUrl = ASSETS.LOGO;
+      mergedLayout.qrisImageUrl = ASSETS.QRIS;
       
       return { 
         ...INITIAL_DATA, 
@@ -212,6 +208,12 @@ const App: React.FC = () => {
   const [fetchError, setFetchError] = useState('');
 
   const SHARED_SHEET_URL = "https://script.google.com/macros/s/AKfycbwiOK1cSZRMjZR3oWDz_PWUm530bWPuaN32dOK_9crpmzeyQAolegpOL23r9F8Cgsnl/exec";
+
+  // Reset error state jika URL gambar berubah (membantu saat hot-reload atau update path)
+  useEffect(() => {
+    setLogoError(false);
+    setQrisError(false);
+  }, [data.layout.logoUrl, data.layout.qrisImageUrl]);
 
   const fetchData = useCallback(async (isManual = false) => {
     if (!SHARED_SHEET_URL) return;
@@ -331,7 +333,6 @@ const App: React.FC = () => {
   const formatCurrency = (amount: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
 
   const { layout } = data;
-  const primaryColorClass = layout.primaryColor || 'indigo';
 
   if (isAdmin && currentView === 'admin') {
     return (
@@ -355,45 +356,38 @@ const App: React.FC = () => {
       {isDataLoading && (
         <div className="fixed inset-0 z-[100] bg-white/95 backdrop-blur-md flex flex-col items-center justify-center">
           <LucideLoader2 className="w-12 h-12 text-indigo-600 animate-spin mb-4" />
-          <p className="font-black text-slate-400 text-sm uppercase tracking-widest animate-pulse tracking-tighter">Memperbarui Data...</p>
+          <p className="font-black text-slate-400 text-sm uppercase tracking-widest animate-pulse">Memperbarui Data...</p>
         </div>
       )}
 
-      {/* ERROR ALERT */}
-      {fetchError && (
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[90] bg-red-500 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4">
-           <LucideAlertTriangle className="w-5 h-5" />
-           <span className="text-xs font-bold">{fetchError}</span>
-           <button onClick={() => setFetchError('')}><LucideX className="w-4 h-4" /></button>
-        </div>
-      )}
-
-      <nav className="fixed top-0 left-0 w-full z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100 py-4 px-6 shadow-sm">
+      <nav className="fixed top-0 left-0 w-full z-50 bg-white/90 backdrop-blur-2xl border-b border-slate-100 py-3 px-6 shadow-sm">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => setCurrentView('home')}>
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center overflow-hidden bg-white shadow-md border border-slate-50 p-1">
+          <div className="flex items-center gap-4 cursor-pointer group" onClick={() => setCurrentView('home')}>
+            <div className="w-10 h-10 md:w-14 md:h-14 rounded-2xl flex items-center justify-center overflow-hidden bg-white shadow-md border border-slate-100 p-1 group-hover:scale-110 transition-transform">
               {!logoError ? (
                 <img 
                   src={layout.logoUrl} 
-                  alt="Ogah Ribetzzz Logo" 
+                  alt="Logo" 
                   className="w-full h-full object-contain" 
                   onError={() => setLogoError(true)}
                 />
               ) : (
-                <div className="w-full h-full bg-indigo-600 flex items-center justify-center text-white font-black text-xs">OR</div>
+                <div className="w-full h-full bg-indigo-600 flex items-center justify-center text-white font-black text-[10px]">OR</div>
               )}
             </div>
-            <span className="font-black text-xl tracking-tighter text-slate-800">
-              Ogah<span className="text-indigo-600">Ribetzzz</span>
-            </span>
+            <div className="flex flex-col">
+              <span className="font-black text-xl md:text-2xl tracking-tight text-slate-800 leading-none">
+                Ogah <span className="text-indigo-600">Ribetzzz</span>
+              </span>
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Jaticempaka Foundation</span>
+            </div>
           </div>
           
-          <div className="hidden md:flex items-center gap-8 font-black uppercase text-[11px] tracking-widest text-slate-400">
-            <button onClick={() => setCurrentView('home')} className={`transition-all hover:scale-105 ${currentView === 'home' ? 'text-indigo-600' : 'hover:text-slate-600'}`}>Beranda</button>
-            <button onClick={() => setCurrentView('transparency')} className={`transition-all hover:scale-105 ${currentView === 'transparency' ? 'text-indigo-600' : 'hover:text-slate-600'}`}>Transparansi</button>
-            <button onClick={() => setCurrentView('gallery')} className={`transition-all hover:scale-105 ${currentView === 'gallery' ? 'text-indigo-600' : 'hover:text-slate-600'}`}>Dokumentasi</button>
-            <button onClick={() => setCurrentView('articles')} className={`transition-all hover:scale-105 ${currentView === 'articles' ? 'text-indigo-600' : 'hover:text-slate-600'}`}>Warta</button>
-            <button onClick={() => setShowLoginModal(true)} className="p-2.5 bg-slate-100 rounded-xl text-slate-400 hover:text-slate-600 transition-all shadow-sm"><LucideLock className="w-4 h-4" /></button>
+          <div className="hidden md:flex items-center gap-8 font-black uppercase text-[10px] tracking-[0.25em] text-slate-400">
+            <button onClick={() => setCurrentView('home')} className={`transition-all ${currentView === 'home' ? 'text-indigo-600' : 'hover:text-slate-600'}`}>Beranda</button>
+            <button onClick={() => setCurrentView('transparency')} className={`transition-all ${currentView === 'transparency' ? 'text-indigo-600' : 'hover:text-slate-600'}`}>Transparansi</button>
+            <button onClick={() => setCurrentView('gallery')} className={`transition-all ${currentView === 'gallery' ? 'text-indigo-600' : 'hover:text-slate-600'}`}>Dokumentasi</button>
+            <button onClick={() => setShowLoginModal(true)} className="p-2.5 bg-slate-50 rounded-xl text-slate-400 hover:text-slate-600 transition-all border border-slate-100"><LucideLock className="w-4 h-4" /></button>
           </div>
           <button className="md:hidden p-2 text-slate-400" onClick={() => setShowLoginModal(true)}><LucideLock className="w-6 h-6" /></button>
         </div>
@@ -404,15 +398,15 @@ const App: React.FC = () => {
           <div className="space-y-24">
             <section className="px-6 max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-16 py-12 md:py-24">
               <div className="flex-1 space-y-8 text-center md:text-left">
-                <div className="inline-flex px-4 py-2 bg-indigo-50 text-indigo-600 rounded-full font-black text-xs uppercase tracking-widest animate-bounce-subtle">Digital Kreatif & Kemanusiaan</div>
+                <div className="inline-flex px-4 py-2 bg-indigo-50 text-indigo-600 rounded-full font-black text-[10px] uppercase tracking-widest animate-bounce-subtle">Digital Kreatif & Kemanusiaan</div>
                 <h1 className="text-5xl md:text-8xl font-black text-slate-900 leading-[1.1] tracking-tighter">
                   {layout.foundationName}
                 </h1>
-                <h2 className="text-xl text-slate-500 font-medium leading-relaxed max-w-xl mx-auto md:mx-0">
+                <p className="text-xl text-slate-500 font-medium leading-relaxed max-w-xl mx-auto md:mx-0">
                   {layout.foundationDescription}
-                </h2>
+                </p>
                 <div className="flex flex-wrap gap-4 justify-center md:justify-start pt-4">
-                  <button onClick={() => setCurrentView('transparency')} className="px-10 py-5 bg-indigo-600 text-white rounded-2xl font-black shadow-2xl shadow-indigo-100 hover:scale-105 transition-all flex items-center gap-3 text-lg">
+                  <button onClick={() => setCurrentView('transparency')} className="px-10 py-5 bg-indigo-600 text-white rounded-2xl font-black shadow-2xl shadow-indigo-200 hover:scale-105 transition-all flex items-center gap-3 text-lg">
                     Cek Transparansi <LucideArrowRight className="w-5 h-5" />
                   </button>
                   <button onClick={() => setShowQrisModal(true)} className="px-10 py-5 bg-white text-slate-800 rounded-2xl font-black shadow-xl hover:bg-slate-50 transition-all border border-slate-100 text-lg">
@@ -431,32 +425,32 @@ const App: React.FC = () => {
         {currentView === 'transparency' && (
           <div className="max-w-6xl mx-auto px-6 space-y-12 pb-24">
              <div className="text-center space-y-4">
-              <h2 className="text-4xl font-black tracking-tight text-slate-800 uppercase">Audit Dana Terbuka</h2>
-              <div className="flex flex-col items-center gap-4">
-                 <p className="text-slate-500 max-w-lg mx-auto">Sinkronisasi langsung dari pembukuan yayasan digital kreatif kami.</p>
-                 <button onClick={() => fetchData(true)} className="flex items-center gap-2 px-6 py-2 bg-white rounded-full text-xs font-black uppercase tracking-widest text-slate-400 border border-slate-100 hover:text-slate-800 transition-all shadow-sm">
-                    <LucideRefreshCw size={14} className={isDataLoading ? 'animate-spin' : ''}/> Sync Database
-                 </button>
-              </div>
+              <h2 className="text-3xl md:text-4xl font-black tracking-tight text-slate-800 uppercase flex items-center justify-center gap-4">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 shadow-sm"><LucideTable className="w-5 h-5" /></div>
+                Audit Dana Terbuka
+              </h2>
+              <button onClick={() => fetchData(true)} className="flex items-center gap-2 px-6 py-2 bg-white rounded-full text-[10px] font-black uppercase tracking-widest text-slate-400 border border-slate-100 hover:text-slate-800 transition-all shadow-sm">
+                <LucideRefreshCw size={14} className={isDataLoading ? 'animate-spin' : ''}/> Perbarui Database
+              </button>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in slide-in-from-bottom-8 duration-700">
                 <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 border-l-8 border-l-emerald-500 flex flex-col justify-between min-h-[160px]">
                   <div>
                     <p className="text-slate-400 text-[11px] font-black uppercase tracking-widest mb-2">Total Pemasukan</p>
-                    <p className="text-3xl md:text-4xl font-black text-slate-800 tabular-nums tracking-tighter leading-none break-all">{formatCurrency(totalIncome)}</p>
+                    <p className="text-3xl font-black text-slate-800 tabular-nums tracking-tighter leading-none break-all">{formatCurrency(totalIncome)}</p>
                   </div>
-                  <div className="mt-4 flex items-center gap-2 text-emerald-600 font-bold text-xs uppercase tracking-widest">
+                  <div className="mt-4 flex items-center gap-2 text-emerald-600 font-bold text-[10px] uppercase tracking-widest">
                     <LucideArrowRight size={14} className="rotate-45"/> <span>Dana Terkumpul</span>
                   </div>
                 </div>
                 
-                <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 border-l-8 border-l-violet-500 flex flex-col justify-between min-h-[160px]">
+                <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 border-l-8 border-l-rose-500 flex flex-col justify-between min-h-[160px]">
                   <div>
                     <p className="text-slate-400 text-[11px] font-black uppercase tracking-widest mb-2">Total Pengeluaran</p>
-                    <p className="text-3xl md:text-4xl font-black text-slate-800 tabular-nums tracking-tighter leading-none break-all">{formatCurrency(totalExpense)}</p>
+                    <p className="text-3xl font-black text-slate-800 tabular-nums tracking-tighter leading-none break-all">{formatCurrency(totalExpense)}</p>
                   </div>
-                  <div className="mt-4 flex items-center gap-2 text-violet-600 font-bold text-xs uppercase tracking-widest">
+                  <div className="mt-4 flex items-center gap-2 text-rose-600 font-bold text-[10px] uppercase tracking-widest">
                     <LucideArrowRight size={14} className="-rotate-45"/> <span>Dana Tersalurkan</span>
                   </div>
                 </div>
@@ -465,59 +459,73 @@ const App: React.FC = () => {
                   <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700"></div>
                   <div className="relative z-10">
                     <p className="text-indigo-200 text-[11px] font-black uppercase tracking-widest mb-2">Saldo Tersisa Saat Ini</p>
-                    <p className="text-3xl md:text-4xl font-black text-white tabular-nums tracking-tighter leading-none break-all">{formatCurrency(balance)}</p>
+                    <p className="text-3xl font-black text-white tabular-nums tracking-tighter leading-none break-all">{formatCurrency(balance)}</p>
                   </div>
-                  <div className="mt-4 flex items-center gap-2 text-indigo-400 font-bold text-xs relative z-10 uppercase tracking-widest">
+                  <div className="mt-4 flex items-center gap-2 text-indigo-400 font-bold text-[10px] relative z-10 uppercase tracking-widest">
                     <LucideDatabase size={14}/> <span>Cadangan Tersisa</span>
                   </div>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
-                  <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-50 h-fit">
-                    <h3 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-3 uppercase tracking-tight">
-                      <div className="w-10 h-10 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm"><LucideArrowRight className="w-5 h-5 rotate-45" /></div>
+                  {/* RIWAYAT DONASI */}
+                  <div className="bg-white p-6 md:p-10 rounded-[2.5rem] shadow-xl border border-slate-50">
+                    <h3 className="text-xl font-black text-slate-800 mb-8 flex items-center gap-3 uppercase tracking-tight">
+                      <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 shadow-sm"><LucideArrowRight className="w-5 h-5 rotate-45" /></div>
                       Riwayat Donasi
                     </h3>
-                    <div className="space-y-4 max-h-[600px] overflow-y-auto scrollbar-hide pr-2">
+                    <div className="space-y-4 max-h-[700px] overflow-y-auto pr-2 scrollbar-hide">
                        {data.incomes.length === 0 ? (
-                          <p className="text-slate-300 text-xs font-bold text-center py-10 uppercase tracking-widest">Belum ada data masuk</p>
+                          <p className="text-slate-300 text-xs font-bold text-center py-20 uppercase tracking-widest">Belum ada data masuk</p>
                        ) : (
                           [...data.incomes].reverse().map((item) => (
-                            <div key={item.id} className="flex justify-between items-center p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:border-emerald-200 transition-all hover:translate-x-1">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-full bg-white border-2 border-emerald-50 flex items-center justify-center text-emerald-600 font-black text-sm shadow-sm">
+                            <div key={item.id} className="flex flex-col md:flex-row md:justify-between md:items-center p-5 bg-slate-50/50 rounded-3xl border border-slate-100 hover:border-emerald-200 transition-all gap-4 group">
+                                <div className="flex items-center gap-4 min-w-0">
+                                    <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-white border border-emerald-50 flex items-center justify-center text-emerald-600 font-black text-lg shadow-sm group-hover:scale-110 transition-transform">
                                       {item.donorName.charAt(0).toUpperCase()}
                                     </div>
-                                    <div><p className="font-black text-slate-800 text-base">{item.donorName}</p></div>
+                                    <div className="min-w-0 flex-grow">
+                                      <p className="font-black text-slate-800 text-sm md:text-base truncate tracking-tight">{item.donorName}</p>
+                                    </div>
                                 </div>
-                                <div className="text-right"><p className="font-black text-emerald-600 text-base">{formatCurrency(item.amount)}</p></div>
+                                <div className="flex flex-row items-center justify-between md:justify-end md:flex-col md:items-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-100">
+                                    <span className="md:hidden text-[10px] font-black text-slate-400 uppercase tracking-widest">Donasi:</span>
+                                    <p className="font-black text-emerald-600 text-base md:text-lg tracking-tight tabular-nums">
+                                      {formatCurrency(item.amount)}
+                                    </p>
+                                </div>
                             </div>
                           ))
                        )}
                     </div>
                   </div>
 
-                  <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-50 h-fit">
-                    <h3 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-3 uppercase tracking-tight">
-                      <div className="w-10 h-10 rounded-2xl bg-indigo-100 flex items-center justify-center text-indigo-600 shadow-sm"><LucideArrowRight className="w-5 h-5 -rotate-45" /></div>
-                      Riwayat Pengeluaran
+                  {/* RIWAYAT PENGELUARAN */}
+                  <div className="bg-white p-6 md:p-10 rounded-[2.5rem] shadow-xl border border-slate-50">
+                    <h3 className="text-xl font-black text-slate-800 mb-8 flex items-center gap-3 uppercase tracking-tight">
+                      <div className="w-10 h-10 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-600 shadow-sm"><LucideArrowRight className="w-5 h-5 -rotate-45" /></div>
+                      Riwayat Belanja
                     </h3>
-                    <div className="space-y-4 max-h-[600px] overflow-y-auto scrollbar-hide pr-2">
+                    <div className="space-y-4 max-h-[700px] overflow-y-auto pr-2 scrollbar-hide">
                        {data.expenses.length === 0 ? (
-                          <p className="text-slate-300 text-xs font-bold text-center py-10 uppercase tracking-widest">Belum ada data keluar</p>
+                          <p className="text-slate-300 text-xs font-bold text-center py-20 uppercase tracking-widest">Belum ada data keluar</p>
                        ) : (
                           [...data.expenses].reverse().map((item) => (
-                            <div key={item.id} className="flex justify-between items-center p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:border-indigo-200 transition-all hover:translate-x-1">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-full bg-white border-2 border-indigo-50 flex items-center justify-center text-indigo-600 font-black text-sm shadow-sm">
+                            <div key={item.id} className="flex flex-col md:flex-row md:justify-between md:items-center p-5 bg-slate-50/50 rounded-3xl border border-slate-100 hover:border-rose-200 transition-all gap-4 group">
+                                <div className="flex items-center gap-4 min-w-0">
+                                    <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-white border border-rose-50 flex items-center justify-center text-rose-600 font-black text-lg shadow-sm group-hover:scale-110 transition-transform">
                                       {item.itemName.charAt(0).toUpperCase()}
                                     </div>
-                                    <div><p className="font-black text-slate-800 text-base">{item.itemName}</p></div>
+                                    <div className="min-w-0 flex-grow">
+                                      <p className="font-black text-slate-800 text-sm md:text-base truncate tracking-tight">{item.itemName}</p>
+                                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{item.qty} Unit • {item.date}</p>
+                                    </div>
                                 </div>
-                                <div className="text-right">
-                                    <p className="font-black text-indigo-500 text-base">{formatCurrency(item.unitPrice * item.qty)}</p>
-                                    <p className="text-[9px] font-black text-slate-400 uppercase">{item.qty} Unit</p>
+                                <div className="flex flex-row items-center justify-between md:justify-end md:flex-col md:items-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-100">
+                                    <span className="md:hidden text-[10px] font-black text-slate-400 uppercase tracking-widest">Total:</span>
+                                    <p className="font-black text-rose-600 text-base md:text-lg tracking-tight tabular-nums">
+                                      {formatCurrency(item.unitPrice * item.qty)}
+                                    </p>
                                 </div>
                             </div>
                           ))
@@ -526,19 +534,6 @@ const App: React.FC = () => {
                   </div>
             </div>
           </div>
-        )}
-
-        {currentView === 'gallery' && (
-           <div className="max-w-6xl mx-auto px-6 pb-24 space-y-12">
-             <h2 className="text-center text-4xl font-black tracking-tight text-slate-800 uppercase">Jejak Kebaikan</h2>
-             <div className="columns-1 sm:columns-2 lg:columns-3 gap-8 space-y-8">
-                {data.gallery.map((item) => (
-                  <div key={item.id} className="break-inside-avoid relative overflow-hidden rounded-[2rem] bg-white shadow-xl group">
-                    <img src={item.url} className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-700" alt={item.caption} />
-                  </div>
-                ))}
-             </div>
-           </div>
         )}
       </main>
 
@@ -549,42 +544,60 @@ const App: React.FC = () => {
             <button onClick={() => setShowQrisModal(false)} className="self-end p-2 bg-slate-50 text-slate-400 hover:text-rose-500 rounded-full transition-all"><LucideX className="w-6 h-6" /></button>
             <div className="overflow-y-auto pr-2 scrollbar-hide flex-grow mt-2 text-center">
               <div className="inline-flex p-4 bg-indigo-50 text-indigo-600 rounded-2xl mb-4 shadow-sm"><LucideQrCode className="w-8 h-8" /></div>
-              <h3 className="text-2xl font-black text-slate-800 tracking-tight mb-4">Scan untuk Donasi</h3>
-              <div className="bg-white p-2 rounded-3xl border-2 border-slate-50 shadow-inner inline-block mb-6 min-h-[100px] flex items-center justify-center">
+              <h3 className="text-2xl font-black text-slate-800 tracking-tight mb-4 leading-tight">Mulai Berbagi Hari Ini</h3>
+              <div className="bg-white p-3 rounded-3xl border-4 border-slate-50 shadow-inner inline-block mb-6 relative group min-w-[200px] min-h-[200px] flex items-center justify-center">
                 {!qrisError ? (
                   <img 
                     src={layout.qrisImageUrl} 
-                    alt="QRIS Flyer" 
-                    className="w-full h-auto rounded-xl shadow-lg" 
+                    alt="QRIS" 
+                    className="w-full h-auto rounded-xl shadow-sm" 
                     onError={() => setQrisError(true)}
                   />
                 ) : (
-                  <div className="p-10 text-slate-400 flex flex-col items-center gap-2">
-                    <LucideAlertTriangle className="w-10 h-10" />
-                    <p className="text-xs font-black uppercase text-center">QRIS tidak tampil?<br/>Cek folder Logo/qris.png</p>
+                  <div className="p-10 text-slate-300 flex flex-col items-center gap-4">
+                    <LucideAlertTriangle className="w-12 h-12" />
+                    <div className="space-y-1">
+                       <p className="text-xs font-black uppercase text-center leading-relaxed tracking-tighter">QRIS Tidak Ditemukan</p>
+                       <p className="text-[10px] text-slate-400 text-center font-bold">Pastikan file "qris.png" ada di folder public</p>
+                    </div>
                   </div>
                 )}
               </div>
               
-              <div className="border-t border-slate-100 pt-6 space-y-4 text-left">
-                <h4 className="font-black text-lg text-slate-800">Konfirmasi Pembayaran</h4>
+              <div className="border-t border-slate-50 pt-8 space-y-6 text-left">
+                <h4 className="font-black text-xl text-slate-800 tracking-tight text-center">Lapor Donasi Anda</h4>
                 {submitSuccess ? (
-                  <div className="bg-emerald-50 text-emerald-700 p-8 rounded-3xl text-center border border-emerald-100 animate-in zoom-in">
-                    <LucideCheckCircle2 className="w-10 h-10 mx-auto mb-3" />
-                    <h5 className="font-black text-lg">Konfirmasi Berhasil!</h5>
-                    <p className="text-xs font-medium mt-1">Terima kasih atas kebaikan Anda.</p>
+                  <div className="bg-emerald-50 text-emerald-700 p-10 rounded-[2.5rem] text-center border border-emerald-100 animate-in zoom-in">
+                    <div className="w-16 h-16 rounded-full bg-emerald-500 text-white flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-200"><LucideCheck className="w-8 h-8" /></div>
+                    <h5 className="font-black text-xl">Laporan Terkirim!</h5>
+                    <p className="text-sm font-medium mt-2 leading-relaxed opacity-75">Terima kasih atas kepeduliannya.</p>
                   </div>
                 ) : (
                   <form onSubmit={handleConfirmDonation} className="space-y-4">
-                    <input type="text" placeholder="Nama Anda (Opsional)" value={confName} onChange={(e) => setConfName(e.target.value)} className="w-full px-5 py-4 rounded-2xl border-2 border-slate-50 focus:border-indigo-600 outline-none font-bold bg-slate-50/50" />
-                    <input required type="number" placeholder="Nominal Rp" value={confAmount} onChange={(e) => setConfAmount(e.target.value)} className="w-full px-5 py-4 rounded-2xl border-2 border-slate-50 focus:border-indigo-600 outline-none font-black bg-slate-50/50 text-lg" />
-                    <div className="relative p-8 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/30 flex flex-col items-center gap-2 cursor-pointer hover:bg-slate-100 transition-colors">
-                       <input required type="file" accept="image/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) { setConfImageFile(file); const r = new FileReader(); r.onload = () => setConfImagePreview(r.result as string); r.readAsDataURL(file); } }} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
-                       <LucideUpload className={`${confImagePreview ? 'text-emerald-500' : 'text-slate-300'} w-8 h-8`} />
-                       <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{confImagePreview ? 'Bukti Terpilih' : 'Klik Upload Bukti'}</span>
+                    <div className="space-y-1">
+                       <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest pl-2">Nama Donatur</label>
+                       <input type="text" placeholder="Hamba Allah" value={confName} onChange={(e) => setConfName(e.target.value)} className="w-full px-6 py-4 rounded-2xl border-2 border-slate-50 focus:border-indigo-600 outline-none font-bold bg-slate-50/50 transition-all placeholder:text-slate-300" />
                     </div>
-                    <button type="submit" disabled={isSubmitting} className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black shadow-xl active:scale-95 transition-all text-lg flex items-center justify-center gap-3 disabled:opacity-50">
-                      {isSubmitting ? <><LucideLoader2 className="animate-spin w-6 h-6"/> <span>Memproses...</span></> : 'Kirim Konfirmasi'}
+                    <div className="space-y-1">
+                       <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest pl-2">Nominal (Tanpa Titik)</label>
+                       <input required type="number" placeholder="Rp 0" value={confAmount} onChange={(e) => setConfAmount(e.target.value)} className="w-full px-6 py-4 rounded-2xl border-2 border-slate-50 focus:border-indigo-600 outline-none font-black bg-slate-50/50 text-xl text-emerald-600 transition-all placeholder:text-slate-300" />
+                    </div>
+                    <div className="relative group overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/30 flex flex-col items-center justify-center py-10 transition-all hover:border-indigo-300 hover:bg-indigo-50/30 cursor-pointer">
+                       <input required type="file" accept="image/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) { setConfImageFile(file); const r = new FileReader(); r.onload = () => setConfImagePreview(r.result as string); r.readAsDataURL(file); } }} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
+                       {confImagePreview ? (
+                          <div className="flex flex-col items-center gap-2">
+                             <LucideCheckCircle2 className="w-10 h-10 text-emerald-500" />
+                             <span className="text-[10px] font-black uppercase text-emerald-600 tracking-widest">Bukti Terpilih</span>
+                          </div>
+                       ) : (
+                          <div className="flex flex-col items-center gap-2">
+                             <LucideUpload className="text-slate-300 w-10 h-10 group-hover:text-indigo-400 transition-colors" />
+                             <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest group-hover:text-indigo-600">Klik Upload Bukti Transfer</span>
+                          </div>
+                       )}
+                    </div>
+                    <button type="submit" disabled={isSubmitting} className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black shadow-2xl shadow-indigo-200 active:scale-95 transition-all text-lg flex items-center justify-center gap-3 disabled:opacity-50 mt-4">
+                      {isSubmitting ? <><LucideLoader2 className="animate-spin w-6 h-6"/> <span>Memproses...</span></> : 'Kirim Laporan'}
                     </button>
                   </form>
                 )}
@@ -595,23 +608,24 @@ const App: React.FC = () => {
       )}
 
       {showLoginModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-          <div className="bg-white w-full max-sm rounded-3xl shadow-2xl p-10 animate-in zoom-in duration-300">
-            <h2 className="text-3xl font-black text-center text-slate-800 tracking-tighter mb-8">Admin Login</h2>
+        <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl p-10 animate-in zoom-in duration-300 border border-slate-100">
+            <h2 className="text-3xl font-black text-center text-slate-800 tracking-tighter mb-8 uppercase">Akses Admin</h2>
             <form onSubmit={handleLogin} className="space-y-4">
-              <input autoFocus type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full px-6 py-4 rounded-xl border-2 border-slate-50 focus:border-indigo-600 outline-none font-bold bg-slate-50/50" placeholder="Username" />
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-6 py-4 rounded-xl border-2 border-slate-50 focus:border-indigo-600 outline-none font-bold bg-slate-50/50" placeholder="Password" />
-              {loginError && <p className="text-rose-500 text-[10px] text-center font-black uppercase tracking-widest">{loginError}</p>}
-              <div className="flex gap-3 pt-4">
-                <button type="button" onClick={() => setShowLoginModal(false)} className="flex-1 py-4 font-bold text-slate-400 text-sm uppercase">Batal</button>
-                <button type="submit" className="flex-1 py-4 bg-indigo-600 text-white font-black rounded-xl shadow-lg text-sm uppercase tracking-widest">Masuk</button>
+              <input autoFocus type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full px-6 py-4 rounded-2xl border-2 border-slate-50 focus:border-indigo-600 outline-none font-bold bg-slate-50/50" placeholder="Username" />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-6 py-4 rounded-2xl border-2 border-slate-50 focus:border-indigo-600 outline-none font-bold bg-slate-50/50" placeholder="Password" />
+              {loginError && <p className="text-rose-500 text-[10px] text-center font-black uppercase tracking-widest pt-2">{loginError}</p>}
+              <div className="flex gap-4 pt-6">
+                <button type="button" onClick={() => setShowLoginModal(false)} className="flex-1 py-4 font-black text-slate-400 text-xs uppercase tracking-widest hover:text-slate-600 transition-colors">Batal</button>
+                <button type="submit" className="flex-1 py-4 bg-indigo-600 text-white font-black rounded-2xl shadow-xl shadow-indigo-100 text-xs uppercase tracking-[0.2em]">Masuk</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      <footer className="fixed bottom-4 left-0 w-full flex justify-center pointer-events-none opacity-0 hover:opacity-100 transition-opacity">
+      {/* SECRET FOOTER ACCESS */}
+      <footer className="fixed bottom-4 left-0 w-full flex justify-center pointer-events-none opacity-0 transition-opacity">
         <input type="password" value={accessCode} onChange={(e) => setAccessCode(e.target.value)} placeholder="..." className="w-12 h-6 text-center bg-transparent border-none text-[8px] text-slate-300 pointer-events-auto outline-none" />
       </footer>
     </div>
