@@ -1,5 +1,14 @@
 import { AppData, LayoutConfig } from './types';
 
+// ============================================================================
+// AREA PENGATURAN GAMBAR MANUAL
+// ============================================================================
+export const ASSETS = {
+  // Menggunakan file yang ada di folder Logo di dalam proyek
+  LOGO: '/Logo/ogah.png', 
+  QRIS: '/Logo/qris.png'
+};
+
 export const APP_CONFIG = {
   ADMIN_USERNAME: 'ogahadmin',
   ADMIN_PASSWORD: 'jaticempaka16',
@@ -15,7 +24,8 @@ export const DEFAULT_LAYOUT: LayoutConfig = {
   headerStyle: 'gradient',
   themeMode: 'light',
   showDonationSection: true,
-  qrisImageUrl: '/Logo/qris.png',
+  logoUrl: ASSETS.LOGO,
+  qrisImageUrl: ASSETS.QRIS,
   donationTitle: 'Mari Membantu Sesama',
   donationDescription: 'Uluran tangan Anda meringankan beban mereka yang membutuhkan tanpa proses berbelit.',
   foundationName: 'Ogah Ribetzzz',

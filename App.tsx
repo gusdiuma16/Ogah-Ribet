@@ -9,7 +9,7 @@ import {
   LucideHeart, LucideTable, LucideLoader2, LucideRefreshCw
 } from 'lucide-react';
 import { Income, Expense, Distribution, AppData, LayoutConfig, AppView, Article, GalleryItem } from './types';
-import { APP_CONFIG, INITIAL_DATA } from './constants';
+import { APP_CONFIG, INITIAL_DATA, ASSETS } from './constants';
 
 // --- HELPER FUNCTIONS ---
 const fileToBase64 = (file: File): Promise<string> => {
@@ -168,10 +168,20 @@ const App: React.FC = () => {
     if (!saved) return INITIAL_DATA;
     try {
       const parsed = JSON.parse(saved);
+      // PENGATURAN MIGRASI: Jika link gambar di storage adalah Google Drive (lama), paksa reset ke ASSETS lokal.
+      const mergedLayout = { ...INITIAL_DATA.layout, ...parsed.layout };
+      
+      if (mergedLayout.logoUrl?.includes('drive.google.com')) {
+         mergedLayout.logoUrl = ASSETS.LOGO;
+      }
+      if (mergedLayout.qrisImageUrl?.includes('drive.google.com')) {
+         mergedLayout.qrisImageUrl = ASSETS.QRIS;
+      }
+      
       return { 
         ...INITIAL_DATA, 
         ...parsed,
-        layout: { ...INITIAL_DATA.layout, ...parsed.layout }
+        layout: mergedLayout
       };
     } catch {
       return INITIAL_DATA;
@@ -364,7 +374,7 @@ const App: React.FC = () => {
             <div className="w-12 h-12 rounded-2xl flex items-center justify-center overflow-hidden bg-white shadow-md border border-slate-50 p-1">
               {!logoError ? (
                 <img 
-                  src="Logo/ogah.png" 
+                  src={layout.logoUrl} 
                   alt="Ogah Ribetzzz Logo" 
                   className="w-full h-full object-contain" 
                   onError={() => setLogoError(true)}
@@ -398,9 +408,9 @@ const App: React.FC = () => {
                 <h1 className="text-5xl md:text-8xl font-black text-slate-900 leading-[1.1] tracking-tighter">
                   {layout.foundationName}
                 </h1>
-                <p className="text-xl text-slate-500 font-medium leading-relaxed max-w-xl mx-auto md:mx-0">
+                <h2 className="text-xl text-slate-500 font-medium leading-relaxed max-w-xl mx-auto md:mx-0">
                   {layout.foundationDescription}
-                </p>
+                </h2>
                 <div className="flex flex-wrap gap-4 justify-center md:justify-start pt-4">
                   <button onClick={() => setCurrentView('transparency')} className="px-10 py-5 bg-indigo-600 text-white rounded-2xl font-black shadow-2xl shadow-indigo-100 hover:scale-105 transition-all flex items-center gap-3 text-lg">
                     Cek Transparansi <LucideArrowRight className="w-5 h-5" />
@@ -551,7 +561,7 @@ const App: React.FC = () => {
                 ) : (
                   <div className="p-10 text-slate-400 flex flex-col items-center gap-2">
                     <LucideAlertTriangle className="w-10 h-10" />
-                    <p className="text-xs font-black uppercase">QRIS Flyer tidak ditemukan</p>
+                    <p className="text-xs font-black uppercase text-center">QRIS tidak tampil?<br/>Cek folder Logo/qris.png</p>
                   </div>
                 )}
               </div>

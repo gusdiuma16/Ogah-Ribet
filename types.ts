@@ -46,6 +46,7 @@ export interface LayoutConfig {
   headerStyle: 'gradient' | 'solid';
   themeMode: 'light' | 'soft';
   showDonationSection: boolean;
+  logoUrl: string; // Properti Baru
   qrisImageUrl: string;
   donationTitle: string;
   donationDescription: string;
