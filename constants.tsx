@@ -3,8 +3,8 @@ import { AppData, LayoutConfig } from './types';
 // Gunakan path relatif (tanpa / di depan) 
 // untuk memastikan aset di folder public terbaca dalam lingkungan iframe
 export const ASSETS = {
-  LOGO: 'ogah.png', 
-  QRIS: 'qris.png'
+  LOGO: '/ogah.png', 
+  QRIS: '/qris.png'
 };
 
 export const APP_CONFIG = {
